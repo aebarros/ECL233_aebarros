@@ -77,14 +77,16 @@ n[t+1,]=A%*%(dx*n[t,]*(exp(r))) #removed the density dependence
 #so I need a for loop probably for different values of L, that creates A matrix of dispersal probability, and then gets an eigen value from it?
 
 #first need a matrix to fill, dominant eigen value in one column, L in the other
-ml=length(seq(.01,5,by=.01))
-el=matrix(NA,ml,2)
-el[,1]=seq(.01,5,by=.01)
 
-L=1
-for(L in 1:500){
-  l=L/100
-  A=A.create(l)
-  el[L,2]=leval(A*dx*(exp(r)))
+Le <- seq(0.01,5,by=0.01) 
+Lmat <- cbind(Le, NA)#create new matrix to populate
+
+for(i in 1:length(Le)){
+  Li=Le[i]
+  dx=(2*Li)/bins #have to recreate dx based on the new L values
+  Lmat[i,2]=leval(A.create(Li)*dx*exp(r)) #fills the out matrix
 }
 
+#make the plot
+plot(Lmat, xlab="Transect Length (L)", ylab="Lambda")
+abline(a=1,b=0, col="red")
