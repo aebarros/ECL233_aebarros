@@ -61,7 +61,7 @@ for(t in 1:(tf-1)){ #for loop that fills in matrix n
 }
 
 #now we have our matrix (n) of density over time!!!
-
+mf = par(mfrow=c(1,2))
 #plotting time
 #first set a row 1 for matrix column numbers
 x.points<-c(seq(from=-20,to=20,by=1)) #sets up points to use for x-axis
