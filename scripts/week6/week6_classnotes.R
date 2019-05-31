@@ -100,7 +100,8 @@ sum(all.outbreak[tf,]==0)/reps #92% of runs disease went extinct
 #we need our pgf
 
 p=numeric(34) #what is this doing? Making a vector of zeros length 34
-for(i in 1:34)p[i]=sum(SARS==(i-1))/34
+q=.1 #why, as q increases, is my chance of extinction decreasing?
+for(i in 1:34)p[i]=(1-q)*sum(SARS==(i-1))/34
 p #probability of seeing 1,2,3 etc offspring...
 g=function(s)sum(p*s^c(0:33))
 #lets compute the probability of extinction by time tf

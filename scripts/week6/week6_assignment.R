@@ -3,7 +3,7 @@
 rm(list=ls())
 library(fitdistrplus)
 load("scripts/week6/SARS.Rdata")
-
+mf = par(mfrow=c(2,2))
 #week 6 assignment
 #p[k]=probability of having k offspring
 
@@ -32,21 +32,21 @@ outbreak.pac=function(tf=10){
   }
   return(N)
 }
-plot(outbreak.pac(),type="l")
+#plot(outbreak.pac(),type="l")
 
 reps=10000
 all.p.pac=matrix(NA,tf,reps)
 
 for(i in 1:reps)all.p.pac[,i]=outbreak.pac(tf=tf)
-matplot(all.p.pac+1,type="l",lty=1,log="y")
+#matplot(all.p.pac+1,type="l",lty=1,log="y")
 
 #need to set hist up for all.p.pac where 10th generation is above 0
 N=which(all.p.pac[10,]>0)
 P.PAC=all.p.pac[,N]
 P.PAC=colSums(P.PAC)
-hist(P.PAC)
+hist(P.PAC, xlab="Population at generation 10")
 
-#for HPC at each step we know how many ind are infected, for each of those we sample randomly from the SARS vector (which tells us how many they contacted). Add those together and take a rbinomial across that total (of 1-q, or probability of each met individual getting infected).
+#for HPC at each step we know how many people are infected, for each of those we sample randomly from the SARS vector (which tells us how many they contacted). Add those together and take a rbinomial across that total (of 1-q, or probability of each met individual getting infected).
 q=0.4
 tf=10
 
@@ -58,19 +58,25 @@ outbreak.hpc=function(tf=10){
   N=matrix(1,tf,1)
   for(t in 2:tf){
     if(N[t-1]>0){
-      N[t] = rbinom(n=1,size=p[2],prob=.6) #no idea what is going on here
-    }else{N[t]=0}
-  }
-  return(N)
+      temp = N[t-1]+sum(sample(0:33,size=N[t-1],replace=T,prob=p.pac))
+      N[t]=rbinom(n=1,size=temp,prob=.6)
+        }
+    else{N[t]=0}}
+  return(N) #I think this is working?
 }
-plot(outbreak.hpc(),type="l")
+#plot(outbreak.hpc(),type="l")
 
 reps=10000
-all.p.pac=matrix(NA,tf,reps)
+all.p.hpc=matrix(NA,tf,reps)
 
-for(i in 1:reps)all.p.pac[,i]=outbreak.pac(tf=tf)
-matplot(all.p.pac+1,type="l",lty=1,log="y")
+for(i in 1:reps)all.p.hpc[,i]=outbreak.hpc(tf=tf)
+#matplot(all.p.hpc+1,type="l",lty=1,log="y") #something isn't right here, none of the trials go extinct
 
+#need to set hist up for all.p.pac where 10th generation is above 0
+N=which(all.p.hpc[10,]>0)
+P.HPC=all.p.hpc[,N]
+P.HPC=colSums(P.HPC)
+hist(P.HPC,xlab="Population at generation 10")
 
 #----------------
 #Part 2
@@ -85,13 +91,33 @@ q.ppac[1,2]=0
 qe <- seq(0.1,1,by=0.1)
 #for(i in 1:34)p.pac[i]=(1-q)*sum(SARS==(i-1))/34
 #i think i need a double for loop here?
-for(j in 1:length(qe)){
-  qe <- seq(0.1,1,by=0.1)
+for(j in (1:length(qe))){
   q=qe[j]
   for(i in 1:34){
     p.pac[i]=(1-q)*sum(SARS==(i-1))/34
     }#what horror have I wrought?
-  q.ppac[j,2]=g.PAC(q.ppac[j-1,2])
-  q.ppac[j,1]=q}
-q.ppac #0.8977957
-for(i in 1:9)temp=g(temp)
+  temp=q.ppac[j,2]
+  q.ppac[j+1,2]=g.PAC(temp)# I'm having issues for some reason populating this
+  q.ppac[j+1,1]=q}
+q.ppac #Why is my chance for extinction decreasing as my q increases?
+
+plot(x=q.ppac[,1],y=q.ppac[,2],xlab="q value",ylab="probability of extinction by 10th generation") 
+
+
+#HPC
+
+g=function(s)q+(1-q)*s
+
+q.phpc=matrix(NA,tf,2)
+q.phpc[1,2]=0
+qe <- seq(0.1,1,by=0.1)
+#for(i in 1:34)p.pac[i]=(1-q)*sum(SARS==(i-1))/34
+#i think i need a double for loop here?
+for(j in (1:length(qe))){
+  q=qe[j]
+  temp=q.phpc[j,2]
+  q.phpc[j+1,2]=g(temp)# I'm having issues for some reason populating this
+  q.phpc[j+1,1]=q}
+q.phpc #Why is my chance for extinction decreasing as my q increases?
+
+plot(x=q.phpc[,1],y=q.phpc[,2],xlab="q value",ylab="probability of extinction by 10th generation") #this one seems right
